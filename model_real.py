@@ -65,7 +65,7 @@ class BertCon(BertPreTrainedModel):
         self.dom_loss1 = CrossEntropyLoss()
         self.dom_cls = nn.Linear(192, bert_config.domain_number)
         # self.tem = bert_config.tem
-        self.tem = torch.tensor(0.05)
+        self.tem = torch.tensor(0.05).cuda()
         # self.tem.requires_grad = True
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, sent_labels=None,
@@ -84,9 +84,9 @@ class BertCon(BertPreTrainedModel):
             similarity_mat = torch.exp(torch.matmul(h,rev_h)/self.tem)
             equal_mat = (sent_labels==rev_sent_labels).float()
             
-            eye = torch.eye(batch_num)
+            eye = torch.eye(batch_num).cuda()
             a = ((equal_mat-eye)*similarity_mat).sum(dim=-1)+1e-5
-            b = ((torch.ones(batch_num,batch_num)-eye)*similarity_mat).sum(dim=-1)+1e-5
+            b = ((torch.ones(batch_num,batch_num).cuda()-eye)*similarity_mat).sum(dim=-1)+1e-5
 
             loss = -(torch.log(a/b)).mean(-1)
             return loss
