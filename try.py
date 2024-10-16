@@ -439,7 +439,7 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
     # Setup CUDA
-    torch.cuda.set_device(0)
+    # torch.cuda.set_device(1)
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu =1
     
