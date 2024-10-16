@@ -1,0 +1,1 @@
+python try.py --output_dir model_output --data_dir data/fdu-mtl/ --model_type COBE --train_domains music --test_domains books --model_name_or_path bert-base-uncased --do_train --do_test --train_batch_size 128 --learning_rate 5e-5 --num_train_epochs 5

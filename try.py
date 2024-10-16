@@ -271,6 +271,7 @@ def save_hiddens(args,data_loader,model):
     model.eval()
     for batch in data_loader:
         batch = tuple(t.to(args.device) for t in batch)
+        print("batch = "+str(batch))
         with torch.no_grad():
             eval_loss = torch.tensor(0, dtype=float).to(args.device)
             inputs = {'input_ids': batch[0],
