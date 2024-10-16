@@ -207,7 +207,7 @@ def train(args, train_dataset,tokenizer,domain_schema, model):
 
     # for n, p in model.bert.named_parameters():
     #     p.requires_grad = False
-    # should_stop = False
+    should_stop = False
     model.to(args.device)
     for epoch in range(int(args.num_train_epochs)):
         epoch_iterator = tqdm(train_dataloader,desc="Iteration")
