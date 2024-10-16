@@ -140,6 +140,11 @@ def init_args():
                               '--model_name_or_path', 'bert-base-uncased',
                               "--do_lower_case",'--do_test','--do_train',
                               '--output_dir','output'])
+    
+    if args.no_cuda or not torch.cuda.is_available():
+        args.device = torch.device("cpu")
+    else:
+        args.device = torch.device("cuda")
     # args = parser.parse_args()
     if args.fp16 and amp is None:
         print("No apex installed, fp16 not used.")
@@ -149,6 +154,7 @@ def init_args():
 
 def train(args, train_dataset,tokenizer,domain_schema, model):
     """ Train the model """
+    
     tb_writer = SummaryWriter(args.output_dir)
     train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
     train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size)
@@ -202,7 +208,7 @@ def train(args, train_dataset,tokenizer,domain_schema, model):
     # for n, p in model.bert.named_parameters():
     #     p.requires_grad = False
     # should_stop = False
-
+    model.to(args.device)
     for epoch in range(int(args.num_train_epochs)):
         epoch_iterator = tqdm(train_dataloader,desc="Iteration")
         for step, batch in enumerate(epoch_iterator):
