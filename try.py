@@ -60,7 +60,7 @@ ALL_MODELS = (
 
 
 MODEL_CLASSES = {
-    'COBE' : (BertConfig, BertCon, BertTokenizer),
+    'cobe' : (BertConfig, BertCon, BertTokenizer),
 }
 
 
