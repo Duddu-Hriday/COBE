@@ -212,10 +212,7 @@ def convert_examples_to_features(examples, max_seq_length,
                               input_mask=input_mask,
                               segment_ids=segment_ids,
                               label=example.label,
-                              domain=example.domain,
-                              m=ms,
-                              ppt=0.1
-                              ))
+                              domain=example.domain))
     return features
 
 def XML2arrayRAW(pos_path,neg_path):
