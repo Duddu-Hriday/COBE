@@ -378,7 +378,17 @@ def estab_faiss(hidden):
 #     print(gpu_index.is_trained)
 #     return gpu_index
 
+# def estab_faiss_cos(hidden):
+#     dim = hidden.shape[1]  # Assuming hidden is your data
+#     index = faiss.IndexFlatL2(dim)  # Create a CPU index
+#     index.add(hidden)  # Add your data to the index
+#     return index
+
 def estab_faiss_cos(hidden):
+    # Convert list to NumPy array if hidden is a list
+    if isinstance(hidden, list):
+        hidden = np.array(hidden)
+    
     dim = hidden.shape[1]  # Assuming hidden is your data
     index = faiss.IndexFlatL2(dim)  # Create a CPU index
     index.add(hidden)  # Add your data to the index
