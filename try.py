@@ -284,7 +284,8 @@ def save_hiddens(args,data_loader,model):
             cls_hidden_list.append(cls_hidden)
             label_list.append(batch[3])
             # dom_list.append(batch[5])
-            dom_list.append(batch[4])
+            if len(batch) > 4:
+                dom_list.append(batch[4])
     cls_hidden_list = torch.cat(cls_hidden_list, axis=0)
     labels =torch.cat(label_list, axis=0)
     dom_list = torch.cat(dom_list, axis=0)
