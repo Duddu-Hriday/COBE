@@ -266,36 +266,49 @@ def train(args, train_dataset,tokenizer,domain_schema, model):
     tb_writer.close()
     return trained_features
 
-def save_hiddens(args,data_loader,model):
-    cls_hidden_list, label_list,dom_list = [],[],[]
+def save_hiddens(args, data_loader, model):
+    cls_hidden_list, label_list, dom_list = [], [], []
     model.eval()
+    
     for batch in data_loader:
         batch = tuple(t.to(args.device) for t in batch)
-        print("batch = "+str(batch))
+        print("batch = " + str(batch))
+        
         with torch.no_grad():
             eval_loss = torch.tensor(0, dtype=float).to(args.device)
-            inputs = {'input_ids': batch[0],
-                              'attention_mask': batch[1],
-                              'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,
-                              # XLM don't use segment_ids
-                              'sent_labels': batch[3],
-                              'meg':'source'}
-            cls_hidden  = model(**inputs)
+            inputs = {
+                'input_ids': batch[0],
+                'attention_mask': batch[1],
+                'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,
+                'sent_labels': batch[3],
+                'meg': 'source'
+            }
+            
+            cls_hidden = model(**inputs)
             cls_hidden_list.append(cls_hidden)
             label_list.append(batch[3])
-            dom_list.append(batch[4])
-            # if len(batch) > 4:
-            #     dom_list.append(batch[4])
+            
+            if len(batch) > 4:
+                dom_list.append(batch[4])
+    
+    # Concatenate tensors along the batch dimension
     cls_hidden_list = torch.cat(cls_hidden_list, axis=0)
-    labels =torch.cat(label_list, axis=0)
-    # if len(dom_list) > 0:
-    #     dom_list = torch.cat(dom_list, axis=0)
-    # else:
-    #     dom_list = torch.tensor([])
-    dom_list = torch.cat(dom_list, axis=0)
-    save_data = TensorDataset(cls_hidden_list,labels,dom_list)
-    torch.save(save_data,args.output_dir+'/hiddens')
+    labels = torch.cat(label_list, axis=0)
+    
+    # If dom_list is not empty, concatenate, otherwise, handle accordingly
+    if len(dom_list) > 0:
+        dom_list = torch.cat(dom_list, axis=0)
+        # Create TensorDataset with dom_list
+        save_data = TensorDataset(cls_hidden_list, labels, dom_list)
+    else:
+        # Create TensorDataset without dom_list
+        save_data = TensorDataset(cls_hidden_list, labels)
+    
+    # Save the dataset
+    torch.save(save_data, args.output_dir + '/hiddens')
+    
     return save_data
+
 
 def load_and_cache_examples(args, tokenizer, domain_schema, mode='train',task_name=None,half = [0]):
 
