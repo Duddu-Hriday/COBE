@@ -288,7 +288,10 @@ def save_hiddens(args,data_loader,model):
                 dom_list.append(batch[4])
     cls_hidden_list = torch.cat(cls_hidden_list, axis=0)
     labels =torch.cat(label_list, axis=0)
-    dom_list = torch.cat(dom_list, axis=0)
+    if len(dom_list) > 0:
+        dom_list = torch.cat(dom_list, axis=0)
+    else:
+        dom_list = torch.tensor([])
     save_data = TensorDataset(cls_hidden_list,labels,dom_list)
     torch.save(save_data,args.output_dir+'/hiddens')
     return save_data
@@ -413,7 +416,10 @@ def evaluate(args, model, tokenizer, mode, test_domain_schema,index,gold_labels)
 
     cls_hidden_list = torch.cat(cls_hidden_list, axis=0)
     labels =torch.cat(label_list, axis=0)
-    dom_list = torch.cat(dom_list,axis=0)
+    if len(dom_list)>0:
+        dom_list = torch.cat(dom_list,axis=0)
+    else:
+        dom_list = torch.tensor([])
 
     preds = knn_interpolate_label_cos(args,cls_hidden_list,index,temperature=5,gold_labels=gold_labels)
     result,errors = compute_metrics_absa(preds, labels)
