@@ -272,7 +272,8 @@ def save_hiddens(args, data_loader, model):
     
     for batch in data_loader:
         batch = tuple(t.to(args.device) for t in batch)
-        print("batch = " + str(batch))
+        
+        print("batch = " + str(len(batch)))
         
         with torch.no_grad():
             eval_loss = torch.tensor(0, dtype=float).to(args.device)
@@ -366,16 +367,22 @@ def estab_faiss(hidden):
     return gpu_index
 
 # cosine
+# def estab_faiss_cos(hidden):
+#     print("Index establishing: ...")
+#     index = faiss.IndexFlat(192, faiss.METRIC_INNER_PRODUCT)
+#     gpu_index = faiss.index_cpu_to_all_gpus(index)
+#     # 建立索引
+#     # gpu_index.add(np.array(hidden))
+#     gpu_index.add(np.array([h for h in hidden]))
+#     print(gpu_index.ntotal)
+#     print(gpu_index.is_trained)
+#     return gpu_index
+
 def estab_faiss_cos(hidden):
-    print("Index establishing: ...")
-    index = faiss.IndexFlat(192, faiss.METRIC_INNER_PRODUCT)
-    gpu_index = faiss.index_cpu_to_all_gpus(index)
-    # 建立索引
-    # gpu_index.add(np.array(hidden))
-    gpu_index.add(np.array([h for h in hidden]))
-    print(gpu_index.ntotal)
-    print(gpu_index.is_trained)
-    return gpu_index
+    dim = hidden.shape[1]  # Assuming hidden is your data
+    index = faiss.IndexFlatL2(dim)  # Create a CPU index
+    index.add(hidden)  # Add your data to the index
+    return index
 
 # knn
 def knn_interpolate_label_cos(args,h,index,temperature,gold_labels):
