@@ -272,9 +272,7 @@ def save_hiddens(args, data_loader, model):
     
     for batch in data_loader:
         batch = tuple(t.to(args.device) for t in batch)
-        
-        print("batch = " + str(len(batch)))
-        
+        # print("batch = " + str(len(batch)))
         with torch.no_grad():
             eval_loss = torch.tensor(0, dtype=float).to(args.device)
             inputs = {
@@ -291,23 +289,15 @@ def save_hiddens(args, data_loader, model):
             
             if len(batch) > 4:
                 dom_list.append(batch[4])
-    
-    # Concatenate tensors along the batch dimension
     cls_hidden_list = torch.cat(cls_hidden_list, axis=0)
     labels = torch.cat(label_list, axis=0)
-    
-    # If dom_list is not empty, concatenate, otherwise, handle accordingly
     if len(dom_list) > 0:
         dom_list = torch.cat(dom_list, axis=0)
-        # Create TensorDataset with dom_list
         save_data = TensorDataset(cls_hidden_list, labels, dom_list)
     else:
-        # Create TensorDataset without dom_list
         save_data = TensorDataset(cls_hidden_list, labels)
-    
-    # Save the dataset
+
     torch.save(save_data, args.output_dir + '/hiddens')
-    
     return save_data
 
 
@@ -368,30 +358,21 @@ def estab_faiss(hidden):
 
 # cosine
 # def estab_faiss_cos(hidden):
-#     print("Index establishing: ...")
-#     index = faiss.IndexFlat(192, faiss.METRIC_INNER_PRODUCT)
-#     gpu_index = faiss.index_cpu_to_all_gpus(index)
-#     # 建立索引
-#     # gpu_index.add(np.array(hidden))
-#     gpu_index.add(np.array([h for h in hidden]))
-#     print(gpu_index.ntotal)
-#     print(gpu_index.is_trained)
-#     return gpu_index
-
-# def estab_faiss_cos(hidden):
-#     dim = hidden.shape[1]  # Assuming hidden is your data
-#     index = faiss.IndexFlatL2(dim)  # Create a CPU index
-#     index.add(hidden)  # Add your data to the index
+#     if isinstance(hidden, list):
+#         hidden = np.array(hidden)  
+#     dim = hidden.shape[1]
+#     index = faiss.IndexFlatL2(dim) 
+#     index.add(hidden)  
 #     return index
-
 def estab_faiss_cos(hidden):
-    # Convert list to NumPy array if hidden is a list
-    if isinstance(hidden, list):
-        hidden = np.array(hidden)
-    
-    dim = hidden.shape[1]  # Assuming hidden is your data
-    index = faiss.IndexFlatL2(dim)  # Create a CPU index
-    index.add(hidden)  # Add your data to the index
+    print("Index establishing: ...")
+    index = faiss.IndexFlat(192, faiss.METRIC_INNER_PRODUCT)
+    # gpu_index = faiss.index_cpu_to_all_gpus(index)
+    # 建立索引
+    # gpu_index.add(np.array(hidden))
+    index.add(np.array([h for h in hidden]))
+    print(index.ntotal)
+    print(index.is_trained)
     return index
 
 # knn
