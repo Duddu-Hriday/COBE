@@ -1,0 +1,120 @@
+[sreek@iitdhmaster COBE]$ python try.py --model_type bert --learning_rate 3e-5 --train_batch_size 16 --num_train_epochs 3
+2024-10-25 13:32:23.651620: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /apps/parallel_studio_xe_2020_update2_cluster_edition/itac/2020.2.031/intel64/slib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/compiler/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/libfabric/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/lib/release:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/ipp/lib/intel64:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mkl/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/tbb/lib/intel64/gcc4.8:/apps/parallel_studio_xe_2020_update2_cluster_edition/debugger_2020/python/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/debugger_2020/libipt/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/../tbb/lib/intel64_lin/gcc4.4:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/../tbb/lib/intel64_lin/gcc4.8:/apps/FDS/bin/INTEL/lib:/usr/lib64
+2024-10-25 13:32:23.651673: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+GPU number is : ~~~~~~~~~~~~~~~~  1
+Downloading vocab.txt: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 232k/232k [00:00<00:00, 561kB/s]
+Downloading tokenizer_config.json: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 48.0/48.0 [00:00<00:00, 9.23kB/s]
+Downloading config.json: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 570/570 [00:00<00:00, 373kB/s]
+Downloading model.safetensors: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 440M/440M [00:12<00:00, 34.3MB/s]
+Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertCon: ['cls.predictions.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.bias', 'cls.seq_relationship.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight']
+- This IS expected if you are initializing BertCon from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertCon from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of BertCon were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['dom_cls.weight', 'dom_cls.bias', 'shared_encoder.2.weight', 'bert.embeddings.position_ids', 'shared_encoder.2.bias', 'shared_encoder.0.weight', 'shared_encoder.0.bias']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+half = [0]
+10/25/2024 13:32:49 - INFO - glue_utils -   Writing example 0 of 1400
+/home/sreek/.local/lib/python3.7/site-packages/transformers/optimization.py:415: FutureWarning: This implementation of AdamW is deprecated and will be removed in a future version. Use the PyTorch implementation torch.optim.AdamW instead, or set `no_deprecation_warning=True` to disable this warning
+  FutureWarning,
+10/25/2024 13:32:52 - INFO - __main__ -   ***** Running training *****
+10/25/2024 13:32:52 - INFO - __main__ -     Num examples = 1400
+10/25/2024 13:32:52 - INFO - __main__ -     Num Epochs = 5
+10/25/2024 13:32:52 - INFO - __main__ -     Total train batch size (w. parallel, distributed & accumulation) = 128
+10/25/2024 13:32:52 - INFO - __main__ -     Gradient Accumulation steps = 1
+10/25/2024 13:32:52 - INFO - __main__ -     Total optimization steps = 55
+Iteration:   0%|                                                                                                                                                                           | 0/11 [00:00<?, ?it/s]/apps/parallel_studio_xe_2020_update2_cluster_edition/intelpython3/lib/python3.7/site-packages/torch/optim/lr_scheduler.py:247: UserWarning: To get the last learning rate computed by the scheduler, please use `get_last_lr()`.
+  warnings.warn("To get the last learning rate computed by the scheduler, "
+10/25/2024 13:33:35 - INFO - __main__ -   epoch: 0, step: 1, loss: 0.0138, lr: 4.90909e-05
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:40<00:00, 41.87s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:31<00:00, 41.01s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:30<00:00, 40.98s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:31<00:00, 41.04s/it]
+Iteration:  45%|██████████████████████████████████████████████████████████████████████████                                                                                         | 5/11 [03:27<04:07, 41.29s/it]10/25/2024 14:07:14 - INFO - __main__ -   epoch: 4, step: 50, loss: 0.1546, lr: 4.54545e-06
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:31<00:00, 41.01s/it]
+Index establishing: ...
+1400
+True
+half = [0]
+10/25/2024 14:13:10 - INFO - glue_utils -   Writing example 0 of 400
+books 0.885
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+[sreek@iitdhmaster COBE]$ python try.py --model_type bert --learning_rate 3e-5 --train_batch_size 32 --num_train_epochs 3
+2024-10-25 13:33:13.529703: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /apps/parallel_studio_xe_2020_update2_cluster_edition/itac/2020.2.031/intel64/slib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/compiler/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/libfabric/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/lib/release:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/ipp/lib/intel64:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mkl/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/tbb/lib/intel64/gcc4.8:/apps/parallel_studio_xe_2020_update2_cluster_edition/debugger_2020/python/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/debugger_2020/libipt/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/../tbb/lib/intel64_lin/gcc4.4:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/../tbb/lib/intel64_lin/gcc4.8:/apps/FDS/bin/INTEL/lib:/usr/lib64
+2024-10-25 13:33:13.529760: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+GPU number is : ~~~~~~~~~~~~~~~~  1
+Downloading vocab.txt: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 232k/232k [00:00<00:00, 6.19MB/s]
+Downloading tokenizer_config.json: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 48.0/48.0 [00:00<00:00, 8.72kB/s]
+Downloading config.json: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 570/570 [00:00<00:00, 291kB/s]
+Downloading model.safetensors: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 440M/440M [00:09<00:00, 47.4MB/s]
+Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertCon: ['cls.seq_relationship.weight', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.bias', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias']
+- This IS expected if you are initializing BertCon from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertCon from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of BertCon were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['shared_encoder.0.bias', 'bert.embeddings.position_ids', 'shared_encoder.2.weight', 'shared_encoder.2.bias', 'dom_cls.weight', 'dom_cls.bias', 'shared_encoder.0.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+half = [0]
+10/25/2024 13:33:32 - INFO - glue_utils -   Writing example 0 of 1400
+/home/sreek/.local/lib/python3.7/site-packages/transformers/optimization.py:415: FutureWarning: This implementation of AdamW is deprecated and will be removed in a future version. Use the PyTorch implementation torch.optim.AdamW instead, or set `no_deprecation_warning=True` to disable this warning
+  FutureWarning,
+10/25/2024 13:33:35 - INFO - __main__ -   ***** Running training *****
+10/25/2024 13:33:35 - INFO - __main__ -     Num examples = 1400
+10/25/2024 13:33:35 - INFO - __main__ -     Num Epochs = 5
+10/25/2024 13:33:35 - INFO - __main__ -     Total train batch size (w. parallel, distributed & accumulation) = 128
+10/25/2024 13:33:35 - INFO - __main__ -     Gradient Accumulation steps = 1
+10/25/2024 13:33:35 - INFO - __main__ -     Total optimization steps = 55
+Iteration:   0%|                                                                                                                                                                           | 0/11 [00:00<?, ?it/s]/apps/parallel_studio_xe_2020_update2_cluster_edition/intelpython3/lib/python3.7/site-packages/torch/optim/lr_scheduler.py:247: UserWarning: To get the last learning rate computed by the scheduler, please use `get_last_lr()`.
+  warnings.warn("To get the last learning rate computed by the scheduler, "
+10/25/2024 13:34:20 - INFO - __main__ -   epoch: 0, step: 1, loss: 0.0138, lr: 4.90909e-05
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [08:18<00:00, 45.35s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [08:21<00:00, 45.58s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [08:17<00:00, 45.27s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [08:17<00:00, 45.23s/it]
+Iteration:  45%|██████████████████████████████████████████████████████████████████████████                                                                                         | 5/11 [03:45<04:30, 45.14s/it]10/25/2024 14:11:21 - INFO - __main__ -   epoch: 4, step: 50, loss: 0.1546, lr: 4.54545e-06
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [08:03<00:00, 43.95s/it]
+Index establishing: ...
+1400
+True
+half = [0]
+10/25/2024 14:17:26 - INFO - glue_utils -   Writing example 0 of 400
+books 0.885
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+[sreek@iitdhmaster COBE]$ python try.py --model_type bert --learning_rate 3e-5 --train_batch_size 64 --num_train_epochs 3
+2024-10-25 13:33:36.332743: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /apps/parallel_studio_xe_2020_update2_cluster_edition/itac/2020.2.031/intel64/slib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/compiler/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/libfabric/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/lib/release:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mpi/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/ipp/lib/intel64:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/mkl/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/tbb/lib/intel64/gcc4.8:/apps/parallel_studio_xe_2020_update2_cluster_edition/debugger_2020/python/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/debugger_2020/libipt/intel64/lib:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/lib/intel64_lin:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/../tbb/lib/intel64_lin/gcc4.4:/apps/parallel_studio_xe_2020_update2_cluster_edition/compilers_and_libraries_2020.2.254/linux/daal/../tbb/lib/intel64_lin/gcc4.8:/apps/FDS/bin/INTEL/lib:/usr/lib64
+2024-10-25 13:33:36.332805: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+GPU number is : ~~~~~~~~~~~~~~~~  1
+Downloading vocab.txt: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 232k/232k [00:00<00:00, 528kB/s]
+Downloading tokenizer_config.json: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 48.0/48.0 [00:00<00:00, 8.57kB/s]
+Downloading config.json: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 570/570 [00:00<00:00, 295kB/s]
+Downloading model.safetensors: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 440M/440M [00:08<00:00, 49.5MB/s]
+Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertCon: ['cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.bias']
+- This IS expected if you are initializing BertCon from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertCon from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of BertCon were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['bert.embeddings.position_ids', 'shared_encoder.0.bias', 'dom_cls.weight', 'shared_encoder.0.weight', 'dom_cls.bias', 'shared_encoder.2.weight', 'shared_encoder.2.bias']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+half = [0]
+10/25/2024 13:33:52 - INFO - glue_utils -   Writing example 0 of 1400
+/home/sreek/.local/lib/python3.7/site-packages/transformers/optimization.py:415: FutureWarning: This implementation of AdamW is deprecated and will be removed in a future version. Use the PyTorch implementation torch.optim.AdamW instead, or set `no_deprecation_warning=True` to disable this warning
+  FutureWarning,
+10/25/2024 13:33:56 - INFO - __main__ -   ***** Running training *****
+10/25/2024 13:33:56 - INFO - __main__ -     Num examples = 1400
+10/25/2024 13:33:56 - INFO - __main__ -     Num Epochs = 5
+10/25/2024 13:33:56 - INFO - __main__ -     Total train batch size (w. parallel, distributed & accumulation) = 128
+10/25/2024 13:33:56 - INFO - __main__ -     Gradient Accumulation steps = 1
+10/25/2024 13:33:56 - INFO - __main__ -     Total optimization steps = 55
+Iteration:   0%|                                                                                                                                                                           | 0/11 [00:00<?, ?it/s]/apps/parallel_studio_xe_2020_update2_cluster_edition/intelpython3/lib/python3.7/site-packages/torch/optim/lr_scheduler.py:247: UserWarning: To get the last learning rate computed by the scheduler, please use `get_last_lr()`.
+  warnings.warn("To get the last learning rate computed by the scheduler, "
+10/25/2024 13:34:37 - INFO - __main__ -   epoch: 0, step: 1, loss: 0.0138, lr: 4.90909e-05
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:26<00:00, 40.58s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:30<00:00, 40.92s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:24<00:00, 40.38s/it]
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:23<00:00, 40.29s/it]
+Iteration:  45%|██████████████████████████████████████████████████████████████████████████                                                                                         | 5/11 [03:21<04:01, 40.26s/it]10/25/2024 14:07:42 - INFO - __main__ -   epoch: 4, step: 50, loss: 0.1546, lr: 4.54545e-06
+Iteration: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [07:21<00:00, 40.16s/it]
+Index establishing: ...
+1400
+True
+half = [0]
+10/25/2024 14:13:30 - INFO - glue_utils -   Writing example 0 of 400
+books 0.885
