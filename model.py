@@ -1,25 +1,8 @@
-from cProfile import label
-from random import betavariate
-from re import S
-import re
-import numpy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.onnx.symbolic_opset9 import dim, unsqueeze
-from transformers import BertModel, XLNetModel
-from transformers.modeling_utils import (
-    find_pruneable_heads_and_indices,
-    prune_linear_layer,
-)
-from typing import Optional
-from transformers.models.bert.modeling_bert import BertOnlyMLMHead
-from bert import BertPreTrainedModel
-from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import LambdaLR
-from torch.autograd import Function
-import math
-from torch.autograd import Variable
+from torch.nn import CrossEntropyLoss
 
 def get_inverse_sqrt_schedule_with_warmup(optimizer, num_warmup_steps, last_epoch=-1):
     """
@@ -47,49 +30,52 @@ def get_inverse_sqrt_schedule_with_warmup(optimizer, num_warmup_steps, last_epoc
 
     return LambdaLR(optimizer, lr_lambda, last_epoch)
 
-class BertCon(BertPreTrainedModel):
-    def __init__(self, bert_config):
+class BertCon(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, domain_number):
         """
-        :param bert_config: configuration for bert model
+        :param input_size: Size of the input features
+        :param hidden_size: Size of the hidden layers in the MLP
+        :param output_size: Size of the final shared encoder output
+        :param domain_number: Number of classes for domain classification
         """
-        super(BertCon, self).__init__(bert_config)
-        self.bert_config = bert_config
-        self.bert = BertModel(bert_config)
-        penultimate_hidden_size = bert_config.hidden_size
+        super(BertCon, self).__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(inplace=True),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(inplace=True)
+        )
+
         self.shared_encoder = nn.Sequential(
-                        nn.Linear(penultimate_hidden_size, penultimate_hidden_size // 2),
-                        nn.ReLU(inplace=True),
-                        nn.Linear(penultimate_hidden_size // 2, 192),
-                    )
+            nn.Linear(hidden_size, hidden_size // 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(hidden_size // 2, output_size),
+        )
 
         self.dom_loss1 = CrossEntropyLoss()
-        self.dom_cls = nn.Linear(192, bert_config.domain_number)
-        # self.tem = bert_config.tem
+        self.dom_cls = nn.Linear(output_size, domain_number)
         self.tem = torch.tensor(0.05)
-        # self.tem.requires_grad = True
 
-    def forward(self, input_ids, token_type_ids=None, attention_mask=None, sent_labels=None,
-                position_ids=None, head_mask=None, dom_labels = None,meg='train'):
-        outputs = self.bert(input_ids, position_ids=position_ids, token_type_ids=token_type_ids,
-                            attention_mask=attention_mask, head_mask=head_mask)
-        hidden = outputs[0]
+    def forward(self, input_embeddings, sent_labels=None, dom_labels=None, mode='train'):
+        # Pass through MLP layers
+        hidden = self.mlp(input_embeddings)
         batch_num = hidden.shape[0]
-        w = hidden[:,0,:]
-        h =  self.shared_encoder(w)
-        if meg=='train':
-            h =  F.normalize(h, p=2, dim=1)
-            sent_labels = sent_labels.unsqueeze(0).repeat(batch_num,1).T
+        h = self.shared_encoder(hidden)
+
+        if mode == 'train':
+            h = F.normalize(h, p=2, dim=1)
+            sent_labels = sent_labels.unsqueeze(0).repeat(batch_num, 1).T
             rev_sent_labels = sent_labels.T
             rev_h = h.T
-            similarity_mat = torch.exp(torch.matmul(h,rev_h)/self.tem)
-            equal_mat = (sent_labels==rev_sent_labels).float()
+            similarity_mat = torch.exp(torch.matmul(h, rev_h) / self.tem)
+            equal_mat = (sent_labels == rev_sent_labels).float()
             
             eye = torch.eye(batch_num)
-            a = ((equal_mat-eye)*similarity_mat).sum(dim=-1)+1e-5
-            b = ((torch.ones(batch_num,batch_num)-eye)*similarity_mat).sum(dim=-1)+1e-5
+            a = ((equal_mat - eye) * similarity_mat).sum(dim=-1) + 1e-5
+            b = ((torch.ones(batch_num, batch_num) - eye) * similarity_mat).sum(dim=-1) + 1e-5
 
-            loss = -(torch.log(a/b)).mean(-1)
+            loss = -(torch.log(a / b)).mean(-1)
             return loss
 
-        elif meg == 'source':
+        elif mode == 'source':
             return F.normalize(h, p=2, dim=1)
