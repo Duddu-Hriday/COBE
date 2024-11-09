@@ -84,6 +84,10 @@ class BertCon(BertPreTrainedModel):
             
             # Forward pass to calculate initial loss
             logits = self.dom_cls(h)
+
+            if dom_labels is None:
+                raise ValueError("dom_labels must not be None during training.")
+                
             initial_loss = self.dom_loss1(logits, dom_labels)
             
             # Backward pass to compute gradient for adversarial perturbation
