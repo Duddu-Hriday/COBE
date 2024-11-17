@@ -56,49 +56,61 @@ class BertCon(BertPreTrainedModel):
         self.bert_config = bert_config
         self.bert = BertModel(bert_config)
         penultimate_hidden_size = bert_config.hidden_size
-        self.shared_encoder = nn.Sequential(
-                        nn.Linear(penultimate_hidden_size, penultimate_hidden_size // 2),
-                        nn.ReLU(inplace=True),
-                        nn.Linear(penultimate_hidden_size // 2, 192),
-                    )
-
+        
+        # Define the RNN layer
+        self.rnn = nn.RNN(input_size=penultimate_hidden_size, 
+                          hidden_size=192, 
+                          num_layers=1, 
+                          batch_first=True, 
+                          dropout=0.2)  # You can adjust dropout as needed
+        
+        # Final classification layer
+        self.sent_cls = nn.Linear(192, bert_config.num_labels)  # For sentiment classification
+        
+        # Domain classification loss
         self.dom_loss1 = CrossEntropyLoss()
         self.dom_cls = nn.Linear(192, bert_config.domain_number)
+        
+        # Temperature for softmax (if needed for domain classification)
         self.tem = torch.tensor(0.05)
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, sent_labels=None,
                 position_ids=None, head_mask=None, dom_labels=None, meg='train'):
-        # Forward pass through BERT model
+        # Get BERT output
         outputs = self.bert(input_ids, position_ids=position_ids, token_type_ids=token_type_ids,
                             attention_mask=attention_mask, head_mask=head_mask)
-        hidden = outputs[0]
+        hidden = outputs[0]  # BERT last hidden states
+
         batch_num = hidden.shape[0]
-        w = hidden[:,0,:]  # Use the [CLS] token representation
-        h = self.shared_encoder(w)
-
+        
+        # Use the hidden states from the [CLS] token for the RNN input
+        rnn_input = hidden[:, 0, :].unsqueeze(1)  # Take the [CLS] token's representation
+        
+        # Pass through RNN layer
+        rnn_out, _ = self.rnn(rnn_input)
+        rnn_out = rnn_out.squeeze(1)  # Squeeze out the time dimension
+        
         if meg == 'train':
-            # Generate adversarial perturbations (sign-based)
-            perturbation = torch.sign(torch.randn_like(h))  # Random perturbation
-            adv_h = h + perturbation * 0.1  # Perturb the hidden states
-            
-            # Normalize the hidden states
-            h = F.normalize(h, p=2, dim=1)
-            adv_h = F.normalize(adv_h, p=2, dim=1)
-
-            # Adversarial loss (cross-entropy loss with perturbations)
-            sent_labels = sent_labels.unsqueeze(0).repeat(batch_num, 1).T
-            rev_sent_labels = sent_labels.T
-            rev_h = h.T
-            similarity_mat = torch.exp(torch.matmul(adv_h, rev_h) / self.tem)  # Use adversarial hidden states
-
-            equal_mat = (sent_labels == rev_sent_labels).float()
-            eye = torch.eye(batch_num)
-            a = ((equal_mat - eye) * similarity_mat).sum(dim=-1) + 1e-5
-            b = ((torch.ones(batch_num, batch_num) - eye) * similarity_mat).sum(dim=-1) + 1e-5
-
-            loss = -(torch.log(a / b)).mean(-1)
-            return loss
-
+            # Sentiment classification loss
+            if sent_labels is not None:
+                # print("yes")
+                sent_preds = self.sent_cls(rnn_out)
+                sent_loss = CrossEntropyLoss()(sent_preds, sent_labels)
+                
+                # Domain classification loss (if needed)
+                # dom_preds = self.dom_cls(rnn_out)
+                # dom_loss = self.dom_loss1(dom_preds, dom_labels)
+                
+                # # Total loss
+                # total_loss = sent_loss + dom_loss
+                # return total_loss
+                return sent_loss
+            else:
+                # print("no")
+                return None  # If no labels are provided, return None (no training loss)
+        
         elif meg == 'source':
-            # Return normalized hidden states
-            return F.normalize(h, p=2, dim=1)
+            # For inference, return the RNN output (normalized)
+            return F.normalize(rnn_out, p=2, dim=1)
+
+
