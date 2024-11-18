@@ -30,6 +30,7 @@ import shutil
 import re
 from glue_utils import *
 import faiss
+# from sklearn.metrics import confusion_matrix, precision_recall_fscore_support, accuracy_score
 
 logger = logging.getLogger(__name__)
 try:
@@ -209,6 +210,8 @@ def train(args, train_dataset,tokenizer,domain_schema, model):
         for step, batch in enumerate(epoch_iterator):
             model.train()
             batch = tuple(t.to(args.device) for t in batch)
+            # print("batch = "+str(batch))
+            # print("batch size = "+str(len(batch)))
             loss = torch.tensor(0, dtype=float).to(args.device)
 
             inputs = {'input_ids': batch[0],
@@ -299,7 +302,7 @@ def save_hiddens(args, data_loader, model):
 def load_and_cache_examples(args, tokenizer, domain_schema, mode='train',task_name=None,half = [0]):
 
     # repalce with SentProcessor2 for 4 domains dataset
-    processor = Sent2Processor()
+    processor = SentProcessor()
 
     # Load data features from cache or dataset file
     task = ""
@@ -390,48 +393,119 @@ def knn_interpolate_label_cos(args,h,index,temperature,gold_labels):
 def compute_metrics_absa(preds, labels):
     correct = 0
     errors = []
+    y_pred = []
+    y_true = labels.tolist()
+    
     for i in range(len(preds)):
-        if labels[i] == np.argmax(preds[i]):
-            correct+=1
-        else:errors.append(i)
-    accuracy = correct/len(labels)
-    return accuracy,errors
+        pred_label = np.argmax(preds[i])
+        y_pred.append(pred_label)
+        if labels[i] == pred_label:
+            correct += 1
+        else:
+            errors.append(i)
+    
+    accuracy = correct / len(labels)
+    return accuracy, errors, y_true, y_pred
 
 # import visualize
 
-def evaluate(args, model, tokenizer, mode, test_domain_schema,index,gold_labels):
+def compute_metrics(preds, labels):
+    # Calculate confusion matrix
+    num_classes = len(set(labels.cpu().numpy()))  # Determine the number of unique classes
+    confusion_matrix = np.zeros((num_classes, num_classes), dtype=int)
+
+    for true, pred in zip(labels, np.argmax(preds, axis=1)):
+        confusion_matrix[true][pred] += 1
+
+    # Calculate accuracy
+    accuracy = np.trace(confusion_matrix) / np.sum(confusion_matrix)
+
+    # Calculate precision, recall, and F1-score for each class
+    precision = []
+    recall = []
+    f1_score = []
+
+    for i in range(num_classes):
+        true_positive = confusion_matrix[i][i]
+        false_positive = sum(confusion_matrix[:, i]) - true_positive
+        false_negative = sum(confusion_matrix[i, :]) - true_positive
+
+        if true_positive + false_positive > 0:
+            precision_i = true_positive / (true_positive + false_positive)
+        else:
+            precision_i = 0
+
+        if true_positive + false_negative > 0:
+            recall_i = true_positive / (true_positive + false_negative)
+        else:
+            recall_i = 0
+
+        if precision_i + recall_i > 0:
+            f1_score_i = 2 * (precision_i * recall_i) / (precision_i + recall_i)
+        else:
+            f1_score_i = 0
+
+        precision.append(precision_i)
+        recall.append(recall_i)
+        f1_score.append(f1_score_i)
+
+    # Calculate macro-averaged metrics
+    precision_avg = np.mean(precision)
+    recall_avg = np.mean(recall)
+    f1_avg = np.mean(f1_score)
+
+    return {
+        "confusion_matrix": confusion_matrix,
+        "accuracy": accuracy,
+        "precision_avg": precision_avg,
+        "recall_avg": recall_avg,
+        "f1_avg": f1_avg,
+    }
+
+def evaluate(args, model, tokenizer, mode, test_domain_schema, index, gold_labels):
     eval_dataset = load_and_cache_examples(args, tokenizer, test_domain_schema, mode=mode)
 
-    eval_sampler = SequentialSampler(eval_dataset) if args.local_rank == -1 else DistributedSampler(eval_dataloader)
+    eval_sampler = SequentialSampler(eval_dataset) if args.local_rank == -1 else DistributedSampler(eval_dataset)
     eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
-    cls_hidden_list, label_list,dom_list = [],[],[]
+    cls_hidden_list, label_list = [], []
     model.eval()
     for batch in eval_dataloader:
         batch = tuple(t.to(args.device) for t in batch)
         with torch.no_grad():
-            eval_loss = torch.tensor(0, dtype=float).to(args.device)
-            inputs = {'input_ids': batch[0],
-                              'attention_mask': batch[1],
-                              'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,
-                              'sent_labels': batch[3],
-                              'meg':'source'}
-            cls_hidden  = model(**inputs)
+            inputs = {
+                'input_ids': batch[0],
+                'attention_mask': batch[1],
+                'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,
+                'sent_labels': batch[3],
+                'meg': 'source'
+            }
+            cls_hidden = model(**inputs)
             cls_hidden_list.append(cls_hidden)
             label_list.append(batch[3])
-            # dom_list.append(batch[5])
 
     cls_hidden_list = torch.cat(cls_hidden_list, axis=0)
-    labels =torch.cat(label_list, axis=0)
-    if len(dom_list)>0:
-        dom_list = torch.cat(dom_list,axis=0)
-    else:
-        dom_list = torch.tensor([])
+    labels = torch.cat(label_list, axis=0)
 
-    preds = knn_interpolate_label_cos(args,cls_hidden_list,index,temperature=5,gold_labels=gold_labels)
-    result,errors = compute_metrics_absa(preds, labels)
+    preds = knn_interpolate_label_cos(args, cls_hidden_list, index, temperature=5, gold_labels=gold_labels)
+    metrics = compute_metrics(preds, labels)
 
-    return result,eval_loss
+    # Print metrics
+    print(f"Confusion Matrix:\n{metrics['confusion_matrix']}")
+    print(f"Accuracy: {metrics['accuracy'] * 100:.2f}%")
+    print(f"Precision (Macro-Average): {metrics['precision_avg'] * 100:.2f}%")
+    print(f"Recall (Macro-Average): {metrics['recall_avg'] * 100:.2f}%")
+    print(f"F1-Score (Macro-Average): {metrics['f1_avg'] * 100:.2f}%")
+
+    # Write to output file
+    with open(args.output_dir + '/evaluation_results.txt', 'w') as f:
+        f.write(f"Confusion Matrix:\n{metrics['confusion_matrix']}\n")
+        f.write(f"Accuracy: {metrics['accuracy'] * 100:.2f}%\n")
+        f.write(f"Precision (Macro-Average): {metrics['precision_avg'] * 100:.2f}%\n")
+        f.write(f"Recall (Macro-Average): {metrics['recall_avg'] * 100:.2f}%\n")
+        f.write(f"F1-Score (Macro-Average): {metrics['f1_avg'] * 100:.2f}%\n")
+
+    return metrics, 0
 
 def load_adv_examples(args,tokenizer):
     exampels = []
@@ -454,12 +528,13 @@ def main():
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
+
     # Setup CUDA
-    # torch.cuda.set_device(1)
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-    args.n_gpu =1
-    
-    print("GPU number is : ~~~~~~~~~~~~~~~~  "+ str(args.n_gpu))
+    args.n_gpu = 1
+
+    print("GPU number is: ~~~~~~~~~~~~~~~~ " + str(args.n_gpu))
+
     # Setup logging
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S',
@@ -471,7 +546,6 @@ def main():
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path,
                                           output_hidden_states=True)
-    # config.aspect_num = args.aspect_num
     config.sent_number = 2
     tokenizer = tokenizer_class.from_pretrained(
         args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
@@ -487,44 +561,54 @@ def main():
                                             config=config, cache_dir='./cache')
         model.to(args.device)
 
-        if args.n_gpu >1:
+        if args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
         train_dataset = load_and_cache_examples(args, tokenizer, mode='train', domain_schema=domain_schema)
-        trained_features = train(args, train_dataset,tokenizer,domain_schema, model)
-        del train_dataset 
+        trained_features = train(args, train_dataset, tokenizer, domain_schema, model)
+        del train_dataset
         gc.collect()
         del model
         torch.cuda.empty_cache()
 
     if args.do_test:
-        # model = model_class.from_pretrained(args.output_dir)
-        # model.to(args.device)
-        # domain_schema = get_domain_schema(args.train_domains)
-        # train_dataset = load_and_cache_examples(args, tokenizer, mode='train', domain_schema=domain_schema)
-        # train_sampler = SequentialSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
-        # train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size)
-        # trained_features = save_hiddens(args,train_dataloader,model)
         if not args.do_train:
-            trained_features = torch.load(args.output_dir+'/hiddens')
+            trained_features = torch.load(args.output_dir + '/hiddens')
         hidden = [u[0].cpu().numpy() for u in trained_features]
         gold_labels = [u[1].cpu().numpy() for u in trained_features]
         index = estab_faiss_cos(hidden)
         args.model_type = args.model_type.lower()
         r = 0
         dom_id = 0
-        with open (args.output_dir+'/test_results.txt','w') as f:
+
+        with open(args.output_dir + '/test_results.txt', 'w') as f:
             for a in args.test_domains:
                 domain_schema = {}
                 domain_schema[a] = dom_id
                 model = model_class.from_pretrained(args.output_dir)
                 model.to(args.device)
-                results,l = evaluate(args, model, tokenizer, 'test', domain_schema,index,gold_labels)
-                print(a, results)
-                r+=results
-                f.write(a+": "+str(results)+'\n')
-                dom_id+=1
-            f.write('\n')
-            f.write("Avg "+str(r/len(args.test_domains))+'\n')
+
+                # Evaluation
+                results, l = evaluate(args, model, tokenizer, 'test', domain_schema, index, gold_labels)
+                accuracy = results['accuracy']
+                precision = results['precision']
+                recall = results['recall']
+                f1 = results['f1']
+
+                print(f"Domain: {a}")
+                print(f"Accuracy: {accuracy:.4f}")
+                print(f"Precision: {precision:.4f}")
+                print(f"Recall: {recall:.4f}")
+                print(f"F1-Score: {f1:.4f}")
+
+                f.write(a + f": Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}\n")
+
+                r += results['accuracy']
+                dom_id += 1
+
+            f.write("\n")
+            f.write("Average Accuracy: " + str(r / len(args.test_domains)) + "\n")
+            print(f"Average Accuracy: {r / len(args.test_domains):.4f}")
+
         del model
         torch.cuda.empty_cache()
     
