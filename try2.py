@@ -501,9 +501,9 @@ def evaluate(args, model, tokenizer, mode, test_domain_schema, index, gold_label
     with open(args.output_dir + '/evaluation_results.txt', 'w') as f:
         f.write(f"Confusion Matrix:\n{metrics['confusion_matrix']}\n")
         f.write(f"Accuracy: {metrics['accuracy'] * 100:.2f}%\n")
-        f.write(f"Precision (Macro-Average): {metrics['precision_avg'] * 100:.2f}%\n")
-        f.write(f"Recall (Macro-Average): {metrics['recall_avg'] * 100:.2f}%\n")
-        f.write(f"F1-Score (Macro-Average): {metrics['f1_avg'] * 100:.2f}%\n")
+        f.write(f"Precision: {metrics['precision_avg'] * 100:.2f}%\n")
+        f.write(f"Recall: {metrics['recall_avg'] * 100:.2f}%\n")
+        f.write(f"F1-Score: {metrics['f1_avg'] * 100:.2f}%\n")
 
     return metrics, 0
 
@@ -590,9 +590,9 @@ def main():
                 # Evaluation
                 results, l = evaluate(args, model, tokenizer, 'test', domain_schema, index, gold_labels)
                 accuracy = results['accuracy']
-                precision = results['precision']
-                recall = results['recall']
-                f1 = results['f1']
+                precision = results['precision_avg']
+                recall = results['recall_avg']
+                f1 = results['f1_avg']
 
                 print(f"Domain: {a}")
                 print(f"Accuracy: {accuracy:.4f}")
