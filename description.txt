@@ -1,0 +1,5 @@
+main.py -> main function, training loop and the testing loop
+model.py -> The inverse square root scheduler for learning rate, the model (BERT + RNN)
+bert.py ->  framework for loading, configuring, and fine-tuning pretrained BERT models 
+bert_utils.py -> utilities to convert and load TensorFlow checkpoint weights into PyTorch models
+glue_utils.py -> converting raw input data into tokenized features compatible with pre-trained models like BERT (data processing framework)
